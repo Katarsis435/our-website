@@ -1,0 +1,449 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Визуализатор алгоритмов сортировки</title>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            margin: 0;
+            padding: 20px;
+            background: linear-gradient(10deg, #667eea 0%, #764ba2 100%);
+            color: #222222;
+            min-height: 100vh;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: rgba(255, 255, 255, 0.1);
+            padding: 30px;
+            border-radius: 15px;
+            backdrop-filter: blur(10px);
+        }
+        
+        h1 {
+            text-align: center;
+            margin-bottom: 30px;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+        }
+        
+        .visualization-container {
+            background: #e1feff;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        
+        #canvas {
+            width: 100%;
+            height: 300px;
+            border: 2px solid #333;
+            border-radius: 5px;
+        }
+
+        .controls {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+        
+        .btn {
+            padding: 15px;
+            border: none;
+            border-radius: 25px;
+            font-size: 20px;
+            cursor: pointer;
+            transition: all 0.3s;
+            background: #ff6b6b;
+            color: #222222;
+        }
+        
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+        }
+
+        .btn:disabled {
+            background: #cccccc;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+        
+        .algorithm-btn {
+            background: #4ecdc4;
+        }
+        
+        .shuffle-btn {
+            background: #ffd166;
+        }
+        
+        .stop-btn {
+            background: #ffb6ca;
+        }
+        
+        .size-control {
+            background: #118ab2;
+        }
+        
+        .status {
+            text-align: center;
+            padding: 15px;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 10px;
+            margin-bottom: 20px;
+            font-size: 20px;
+        }
+        
+        .info {
+            display: flex;
+            justify-content: space-around;
+            flex-wrap: wrap;
+            gap: 20px;
+            margin-top: 20px;
+        }
+        
+        .info-item {
+            background: rgba(255, 255, 255, 0.2);
+            padding: 15px;
+            border-radius: 10px;
+            text-align: center;
+            flex: 1;
+            min-width: 200px;
+        }
+        
+        .size-control-container {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 20px;
+            justify-content: center;
+        }
+        
+        .size-control-container input {
+            padding: 10px;
+            border: none;
+            border-radius: 5px;
+            width: 80px;
+            text-align: center;
+        }
+        
+        .size-control-container button {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            background: #118ab2;
+            color: white;
+            cursor: pointer;
+        }
+        
+        .size-control-container button:hover {
+            background: #0f7a9d;
+        }
+
+        .explanation {
+            margin-top: 30px;
+            padding: 20px;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 10px;
+        }
+
+        .algorithm-explanation {
+            display: none;
+            padding: 15px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+            margin-top: 10px;
+        }
+
+        .algorithm-explanation.active {
+            display: block;
+            margin-bottom: 20px; /* Добавь эту строку */
+        }
+        
+        .explanation h3 {
+            margin-top: 0;
+            cursor: pointer;
+            padding: 10px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 5px;
+        }
+        
+        .explanation h3:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Визуализатор алгоритмов сортировки＼(＾▽＾)／ </h1>
+        
+        <div class="status" id="status">
+            Статус: Готов к работе (¬‿¬ )
+        </div>
+        
+        <div class="size-control-container">
+            <label for="arraySize">Количество элементов (10-100):</label>
+            <input type="number" id="arraySize" min="10" max="100" value="50">
+            <button onclick="changeArraySize()">Применить</button>
+        </div>
+        
+        <div class="visualization-container">
+            <canvas id="canvas" width="1160" height="300"></canvas>
+        </div>
+        
+        <div class="controls">
+            <button class="btn algorithm-btn" onclick="startSorting('bubble')">Bubble Sort</button>
+            <button class="btn algorithm-btn" onclick="startSorting('selection')">Selection Sort</button>
+            <button class="btn algorithm-btn" onclick="startSorting('insertion')">Insertion Sort</button>
+            <button class="btn algorithm-btn" onclick="startSorting('shell')">Shell Sort</button>
+            <button class="btn algorithm-btn" onclick="startSorting('quick')">Quick Sort</button>
+            <button class="btn algorithm-btn" onclick="startSorting('merge')">Merge Sort</button>
+            <button class="btn algorithm-btn" onclick="startSorting('heap')">Heap Sort</button>
+            <button class="btn algorithm-btn" onclick="startSorting('counting')">Counting Sort</button>
+
+            <button class="btn stop-btn" onclick="stopSorting()">Остановить</button>
+        </div>
+        
+        <div class="info">
+            <div class="info-item" id="algorithmInfo">
+                <strong>Алгоритм:</strong> <span id="currentAlgorithm">-</span>
+            </div>
+            <div class="info-item" id="timeInfo">
+                <strong>Время сортировки:</strong> <span id="sortTime">0.000 сек</span>
+            </div>
+            <div class="info-item" id="elementsInfo">
+                <strong>Элементов:</strong> <span id="elementCount">50</span>
+            </div>
+        </div>
+        
+        <div class="explanation">
+            <h2>Объяснение алгоритмов сортировки:</h2>
+            
+            <h3 onclick="toggleExplanation('bubble')">Bubble Sort (Пузырьковая сортировка)</h3>
+            <div id="bubble-explanation" class="algorithm-explanation">
+                <p>Попарно сравнивает соседние элементы и меняет их местами, если они находятся в неправильном порядке. Процесс повторяется до тех пор, пока массив не будет отсортирован.</p>
+                <p><strong>Сложность:</strong> O(n²) в худшем и среднем случае, O(n) в лучшем случае</p>
+            </div>
+            
+            <h3 onclick="toggleExplanation('selection')">Selection Sort (Сортировка выбором)</h3>
+            <div id="selection-explanation" class="algorithm-explanation">
+                <p>Находит минимальный элемент в неотсортированной части массива и помещает его в начало. Процесс повторяется для оставшейся части массива.</p>
+                <p><strong>Сложность:</strong> O(n²) во всех случаях</p>
+            </div>
+            
+            <h3 onclick="toggleExplanation('insertion')">Insertion Sort (Сортировка вставками)</h3>
+            <div id="insertion-explanation" class="algorithm-explanation">
+                <p>Постепенно строит отсортированную последовательность, по одному элементу за раз, вставляя каждый новый элемент в правильную позицию в уже отсортированной части.</p>
+                <p><strong>Сложность:</strong> O(n²) в худшем и среднем случае, O(n) в лучшем случае</p>
+            </div>
+            
+            <h3 onclick="toggleExplanation('shell')">Shell Sort (Сортировка Шелла)</h3>
+            <div id="shell-explanation" class="algorithm-explanation">
+                <p>Улучшенная версия сортировки вставками. Сравнивает элементы, находящиеся на определенном расстоянии друг от друга, постепенно уменьшая это расстояние.</p>
+                <p><strong>Сложность:</strong> Зависит от выбранной последовательности промежутков</p>
+            </div>
+            
+            <h3 onclick="toggleExplanation('quick')">Quick Sort (Быстрая сортировка)</h3>
+            <div id="quick-explanation" class="algorithm-explanation">
+                <p>Выбирает опорный элемент и разделяет массив на две части: элементы меньше опорного и элементы больше опорного. Рекурсивно применяет этот процесс к обеим частям.</p>
+                <p><strong>Сложность:</strong> O(n log n) в среднем случае, O(n²) в худшем случае</p>
+            </div>
+            
+            <h3 onclick="toggleExplanation('merge')">Merge Sort (Сортировка слиянием)</h3>
+            <div id="merge-explanation" class="algorithm-explanation">
+                <p>Рекурсивно разделяет массив на две половины до тех пор, пока не останутся отдельные элементы, затем объединяет их в отсортированном порядке.</p>
+                <p><strong>Сложность:</strong> O(n log n) во всех случаях</p>
+            </div>
+            
+            <h3 onclick="toggleExplanation('heap')">Heap Sort (Пирамидальная сортировка)</h3>
+            <div id="heap-explanation" class="algorithm-explanation">
+                <p>Строит бинарную кучу из элементов массива, затем последовательно извлекает максимальный элемент и перестраивает кучу.</p>
+                <p><strong>Сложность:</strong> O(n log n) во всех случаях</p>
+            </div>
+            
+            <h3 onclick="toggleExplanation('counting')">Counting Sort (Сортировка подсчетом)</h3>
+            <div id="counting-explanation" class="algorithm-explanation">
+                <p>Подсчитывает количество вхождений каждого элемента, затем восстанавливает отсортированный массив на основе этих подсчетов. Эффективна для целых чисел в небольшом диапазоне.</p>
+                <p><strong>Сложность:</strong> O(n + k), где k - диапазон значений</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const canvas = document.getElementById('canvas');
+        const ctx = canvas.getContext('2d');
+        const statusElement = document.getElementById('status');
+        const currentAlgorithmElement = document.getElementById('currentAlgorithm');
+        const sortTimeElement = document.getElementById('sortTime');
+        const elementCountElement = document.getElementById('elementCount');
+        
+        let animationId;
+        
+        // Функция для получения данных с сервера
+        async function fetchData() {
+            try {
+                const response = await fetch('/get-data');
+                return await response.json();
+            } catch (error) {
+                console.error('Ошибка получения данных:', error);
+                return null;
+            }
+        }
+        
+        // Функция отрисовки столбцов
+        function drawBars(data) {
+            const { bars, highlight_indices, running, current_algorithm, sort_time, array_size } = data;
+            
+            // Очистка canvas
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            const barWidth = canvas.width / bars.length;
+            const maxBarHeight = Math.max(...bars);
+            const scale = (canvas.height - 40) / maxBarHeight;
+            
+            // Отрисовка столбцов
+            bars.forEach((height, index) => {
+                const barHeight = height * scale;
+                const x = index * barWidth;
+                const y = canvas.height - barHeight;
+                
+                // Выбор цвета
+                if (highlight_indices.includes(index)) {
+                    ctx.fillStyle = '#ef476f'; // Красный для выделенных элементов
+                } else {
+                    ctx.fillStyle = '#4ecdc4'; // Бирюзовый для обычных элементов
+                }
+                
+                ctx.fillRect(x, y, barWidth - 1, barHeight);
+            });
+            
+            // Обновление информации
+            if (current_algorithm) {
+                const algorithmNames = {
+                    'bubble': 'Bubble Sort',
+                    'selection': 'Selection Sort',
+                    'insertion': 'Insertion Sort',
+                    'shell': 'Shell Sort',
+                    'quick': 'Quick Sort',
+                    'merge': 'Merge Sort',
+                    'heap': 'Heap Sort',
+                    'counting': 'Counting Sort'
+                };
+                currentAlgorithmElement.textContent = algorithmNames[current_algorithm] || current_algorithm;
+            }
+            
+            if (sort_time > 0) {
+                sortTimeElement.textContent = sort_time.toFixed(3) + ' сек';
+            }
+            
+            elementCountElement.textContent = array_size;
+            
+            statusElement.textContent = running ? 
+                `Статус: Сортировка выполняется (${currentAlgorithmElement.textContent})` : 
+                'Статус: Готов к работе';
+            
+            statusElement.style.background = running ? 
+                'rgba(76, 175, 80, 0.3)' : 'rgba(255, 255, 255, 0.2)';
+        }
+        
+        // Функция анимации
+        function animate() {
+            fetchData().then(data => {
+                if (data) {
+                    drawBars(data);
+                }
+            });
+            
+            animationId = requestAnimationFrame(animate);
+        }
+        
+        // Запуск сортировки
+        async function startSorting(algorithm) {
+            const size = document.getElementById('arraySize').value;
+            const response = await fetch(`/start-sorting/${algorithm}?size=${size}`);
+            const message = await response.text();
+            statusElement.textContent = `Статус: ${message}`;
+        }
+        
+        // Остановка сортировки
+        async function stopSorting() {
+            const response = await fetch('/stop-sorting');
+            const message = await response.text();
+            statusElement.textContent = `Статус: ${message}`;
+        }
+        
+        // Перемешивание массива
+        async function shuffleBars() {
+            const response = await fetch('/shuffle');
+            const message = await response.text();
+            statusElement.textContent = `Статус: ${message}`;
+        }
+        
+        // Изменение размера массива
+        async function changeArraySize() {
+            const sizeInput = document.getElementById('arraySize');
+            let size = parseInt(sizeInput.value);
+            
+            // Проверка ограничений
+            if (size < 10) size = 10;
+            if (size > 100) size = 100;
+            sizeInput.value = size;
+            
+            const response = await fetch('/change-size', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ size: size })
+            });
+            
+            const message = await response.text();
+            statusElement.textContent = `Статус: ${message}`;
+        }
+        
+        // Переключение объяснений алгоритмов
+        function toggleExplanation(algorithm) {
+            const explanation = document.getElementById(`${algorithm}-explanation`);
+            const isActive = explanation.classList.contains('active');
+            
+            // Скрыть все объяснения
+            document.querySelectorAll('.algorithm-explanation').forEach(el => {
+                el.classList.remove('active');
+            });
+            
+            // Показать/скрыть выбранное объяснение
+            if (!isActive) {
+                explanation.classList.add('active');
+            }
+        }
+        
+        // Инициализация
+        function init() {
+            // Запуск анимации
+            animate();
+            
+            // Первоначальное получение данных
+            fetchData().then(data => {
+                if (data) {
+                    drawBars(data);
+                }
+            });
+        }
+        
+        // Запуск при загрузке страницы
+        window.onload = init;
+        
+        // Остановка анимации при закрытии страницы
+        window.onbeforeunload = function() {
+            if (animationId) {
+                cancelAnimationFrame(animationId);
+            }
+        };
+    </script>
+</body>
+</html>
